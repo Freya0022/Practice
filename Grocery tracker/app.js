@@ -17,7 +17,8 @@ const productSchema = new mongoose.Schema({
     name: String,
     bestBefore: Date,
     remain: String,
-    category: String
+    category: String,
+    tags: { type: [String], default: [] }
 });
 
 const Product = mongoose.model('Product', productSchema);
@@ -27,6 +28,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname,'/views'));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 function calculateRemaining(bestBeforeDate) {
@@ -47,6 +49,43 @@ app.get('/',(req,res) => {
     const categories = ["Drink", "Frozen", "Liquor", "Household", "Pantry", "Pet Foods"];
     res.render('home.ejs',{categories})
 })
+
+
+
+app.post('/toggleTagColor/:id', async (req, res) => {
+    const { id } = req.params;
+    const { tag } = req.body;
+
+    try {
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Ensure `tag` is valid (e.g., not null)
+        if (tag === null || tag === undefined) {
+            return res.status(400).json({ success: false, message: 'Invalid tag value' });
+        }
+
+        // Toggle tag logic
+        const tags = product.tags || [];
+        const tagIndex = tags.indexOf(tag);
+
+        if (tagIndex > -1) {
+            tags.splice(tagIndex, 1); // Remove the tag
+        } else {
+            tags.push(tag); // Add the tag
+        }
+
+        product.tags = tags;
+        await product.save();
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Error updating tag' });
+    }
+});
 
 app.get('/category/:category', async(req, res) => {
     const category = req.params.category;

@@ -1,0 +1,15 @@
+.badge-danger {
+    background-color: #ee4f8f; /* Red color */
+    color: #fff;
+}
+
+.badge-primary {
+    background-color: #6985a3; /* Blue color */
+    color: #fff;
+}
+
+.tag-box {
+    cursor: pointer; /* Make the tag box clickable */
+    padding: 5px;
+    border-radius: 5px;
+}

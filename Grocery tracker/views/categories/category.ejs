@@ -1,14 +1,25 @@
 <%- include('../layouts/boilerplates') %>
 
-<h1><%= category %></h1>
+<h1 class="text-center"><%= category %></h1>
 
-<table class="table table-hover table-bordered">
+<div class="dropdown mt-3">
+    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Filters
+    </button>
+    <ul class="dropdown-menu">
+      <li><a class="dropdown-item filter-tag" href="#" data-tag="tag">Tag</a></li>
+      <li><a class="dropdown-item filter-tag" href="#" data-tag="noTag">noTag</a></li>
+    </ul>
+</div>
+
+<table class="table table-hover table-bordered mt-3">
     <thead>
         <tr>
             <th scope="col">#</th>
             <th scope="col">Product Name</th>
             <th scope="col">Best Before</th>
             <th scope="col">Remaining</th>
+            <th scope="col">Tags</th>
             <th scope="col">Actions</th>
         </tr>
     </thead>
@@ -20,8 +31,17 @@
             <td><%= moment(product.bestBefore).format('YYYY-MM-DD') %></td>
             <td><%= product.remain %></td>
             <td>
-                <a href="/edit/<%= category %>/<%= product.id %>" class="btn btn-primary btn-sm">Edit</a>
-                <form action="/delete/<%= category %>/<%= product.id %>" method="POST" style="display:inline;">
+                <span 
+                    class="badge tag-box <%= product.tags.includes('red') ? 'badge-danger' : 'badge-primary' %>" 
+                    data-id="<%= product._id %>" 
+                    data-tag="<%= product.tags.includes('red') ? 'red' : '' %>"
+                    onclick="toggleTagColor(this)">
+                    Mark
+                </span>
+            </td>
+            <td>
+                <a href="/edit/<%= category %>/<%= product._id %>" class="btn btn-primary btn-sm">Edit</a>
+                <form action="/delete/<%= category %>/<%= product._id %>" method="POST" style="display:inline;">
                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                 </form>
             </td>
@@ -33,4 +53,57 @@
     <a href="/add/<%= category %>" class="btn btn-success mt-3">Add New Product</a>
 </div>
 
+<script>
+    // Function to toggle tag color - defined in global scope
+    function toggleTagColor(element) {
+    console.log("Tag clicked!");
+    const currentTag = element.getAttribute('data-tag');
+    const newTag = currentTag === 'red' ? '' : 'red';  // Toggle between no tag and 'red'
+    const newClass = newTag === 'red' ? 'badge-danger' : 'badge-primary';  // Red or blue class
+    element.classList.remove('badge-danger', 'badge-primary');
+    element.classList.add(newClass);
+    element.setAttribute('data-tag', newTag);
 
+    const productId = element.getAttribute('data-id');
+
+    // Send an AJAX request to update the product's tag color in the database
+    fetch(`/toggleTagColor/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tag: newTag })  // Send the tag value
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            console.log("Tag color updated successfully!");
+        }
+    }).catch(err => {
+        console.error("Error updating tag color:", err);
+    });
+}
+
+
+    // DOMContentLoaded for attaching filter events
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM fully loaded and parsed");
+
+        // Filter tags based on user selection
+        document.querySelectorAll('.filter-tag').forEach(filter => {
+            filter.addEventListener('click', function(event) {
+                event.preventDefault();
+                const filterValue = this.getAttribute('data-tag');
+                const rows = document.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const hasRedTag = Array.from(row.querySelectorAll('.tag-box'))
+                        .some(tag => tag.getAttribute('data-tag') === 'red');
+
+                    if ((filterValue === 'tag' && !hasRedTag) || (filterValue === 'noTag' && hasRedTag)) {
+                        row.style.display = 'none';
+                    } else {
+                        row.style.display = '';
+                    }
+                });
+            });
+        });
+    });
+</script>
