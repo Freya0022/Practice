@@ -1,15 +1,25 @@
 .badge-danger {
-    background-color: #ee4f8f; /* Red color */
+    background-color: #ee4f8f; 
     color: #fff;
 }
 
 .badge-primary {
-    background-color: #6985a3; /* Blue color */
+    background-color: #6985a3; 
     color: #fff;
 }
 
 .tag-box {
-    cursor: pointer; /* Make the tag box clickable */
+    cursor: pointer; 
     padding: 5px;
     border-radius: 5px;
+}
+
+.dropdown .btn {
+    font-weight: bold;
+    display: inline-block;
+}
+
+thead th {
+    text-align: center;  
+    vertical-align: middle;
 }

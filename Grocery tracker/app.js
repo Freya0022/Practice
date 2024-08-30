@@ -38,11 +38,10 @@ function calculateRemaining(bestBeforeDate) {
     const daysRemaining = bestBefore.diff(currentDate, 'days');
     const monthsRemaining = bestBefore.diff(currentDate, 'months');
 
-    if (daysRemaining > 30) {
-        return `${monthsRemaining} month${monthsRemaining > 1 ? 's' : ''}`;
-    } else {
-        return `${daysRemaining} day${daysRemaining > 1 ? 's' : ''}`;
-    }
+    return {
+        days: daysRemaining,
+        months: monthsRemaining
+    };
 }
 
 app.get('/',(req,res) => {
@@ -89,10 +88,21 @@ app.post('/toggleTagColor/:id', async (req, res) => {
 
 app.get('/category/:category', async(req, res) => {
     const category = req.params.category;
+    const sortOrder = req.query.sort || 'asc';
     const categories = ["Drink", "Frozen", "Liquor", "Household", "Pantry", "Pet Foods"];
-    const products = await Product.find({ category });
-    products.forEach(product => {
-        product.remain = calculateRemaining(product.bestBefore);
+    let products = await Product.find({ category });
+    products = products.map(product => {
+        const { days, months } = calculateRemaining(product.bestBefore);
+        return {
+            ...product.toObject(),
+            remainDays: days,
+            remainMonths: months,
+        };
+    });
+
+    // Sort products by remaining days (numeric value)
+    products.sort((a, b) => {
+        return sortOrder === 'asc' ? a.remainDays - b.remainDays : b.remainDays - a.remainDays;
     });
     res.render('categories/category', { category, categories,products, moment});
 });
