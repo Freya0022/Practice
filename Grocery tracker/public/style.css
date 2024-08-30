@@ -1,3 +1,7 @@
+body {
+    background-color: rgb(238, 221, 228);
+}
+
 .badge-danger {
     background-color: #ee4f8f; 
     color: #fff;

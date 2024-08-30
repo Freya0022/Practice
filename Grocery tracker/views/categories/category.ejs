@@ -1,6 +1,5 @@
 <%- include('../layouts/boilerplates') %>
 
-<h1 class="text-center"><%= category %></h1>
 <div class="container">
 <div class="dropdown mt-3">
     <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -41,12 +40,13 @@
             <td><%= product.name %></td>
             <td><%= moment(product.bestBefore).format('YYYY-MM-DD') %></td>
             <td>
-                <% if (product.remainMonths > 0) { %>
+                <% if (product.remainDays > 30) { %>
                     <%= product.remainMonths %> month<%= product.remainMonths > 1 ? 's' : '' %>
                 <% } else { %>
                     <%= product.remainDays %> day<%= product.remainDays !== 1 ? 's' : '' %>
                 <% } %>
             </td>
+            
             <td>
                 <span 
                     class="badge tag-box <%= product.tags.includes('red') ? 'badge-danger' : 'badge-primary' %>" 

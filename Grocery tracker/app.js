@@ -16,7 +16,8 @@ mongoose.connect('mongodb://localhost:27017/groceryTracker', {
 const productSchema = new mongoose.Schema({
     name: String,
     bestBefore: Date,
-    remain: String,
+    remainDays: Number, 
+    remainMonths: Number,
     category: String,
     tags: { type: [String], default: [] }
 });
@@ -34,15 +35,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 function calculateRemaining(bestBeforeDate) {
     const currentDate = moment();
     const bestBefore = moment(bestBeforeDate);
-
     const daysRemaining = bestBefore.diff(currentDate, 'days');
     const monthsRemaining = bestBefore.diff(currentDate, 'months');
-
-    return {
-        days: daysRemaining,
-        months: monthsRemaining
-    };
+    return { days: daysRemaining, months: monthsRemaining };
 }
+
 
 app.get('/',(req,res) => {
     const categories = ["Drink", "Frozen", "Liquor", "Household", "Pantry", "Pet Foods"];
@@ -91,15 +88,6 @@ app.get('/category/:category', async(req, res) => {
     const sortOrder = req.query.sort || 'asc';
     const categories = ["Drink", "Frozen", "Liquor", "Household", "Pantry", "Pet Foods"];
     let products = await Product.find({ category });
-    products = products.map(product => {
-        const { days, months } = calculateRemaining(product.bestBefore);
-        return {
-            ...product.toObject(),
-            remainDays: days,
-            remainMonths: months,
-        };
-    });
-
     // Sort products by remaining days (numeric value)
     products.sort((a, b) => {
         return sortOrder === 'asc' ? a.remainDays - b.remainDays : b.remainDays - a.remainDays;
@@ -116,10 +104,12 @@ app.get('/add/:category', (req, res) => {
 app.post('/add/:category', (req, res) => {
     const category = req.params.category;
     const { name, bestBefore } = req.body;
+    const { days, months } = calculateRemaining(bestBefore);
     const newProduct = new Product({
         name,
         bestBefore,
-        remain: calculateRemaining(bestBefore),
+        remainDays: days,
+        remainMonths: months,
         category 
     });
     newProduct.save().then(() => {
@@ -140,9 +130,8 @@ app.get('/edit/:category/:id', async (req, res) => {
 app.post('/edit/:category/:id', async (req, res) => {
     const { id, category } = req.params;
     const { name, bestBefore } = req.body;
-    const remain = calculateRemaining(bestBefore);
-
-    await Product.findByIdAndUpdate(id, { name, bestBefore, remain });
+    const { days, months } = calculateRemaining(bestBefore);
+    await Product.findByIdAndUpdate(id, { name, bestBefore, remainDays: days, remainMonths: months });
     res.redirect(`/category/${category}`);
 });
 
